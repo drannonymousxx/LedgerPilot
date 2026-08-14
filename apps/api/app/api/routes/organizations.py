@@ -19,6 +19,43 @@ class CategoryResponse(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+class OrganizationCreate(BaseModel):
+    name: str
+
+
+class OrganizationResponse(BaseModel):
+    id: UUID
+    name: str
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+@router.post("", response_model=OrganizationResponse, status_code=status.HTTP_201_CREATED)
+def create_organization(payload: OrganizationCreate, db: Session = Depends(get_db)):
+    """
+    Create a new organization and seed default starter categories.
+    """
+    org = Organization(name=payload.name)
+    db.add(org)
+    db.commit()
+    db.refresh(org)
+
+    # Seed starter categories for new org
+    seed_default_categories(db=db, organization_id=org.id)
+
+    return org
+
+
+@router.get("", response_model=List[OrganizationResponse], status_code=status.HTTP_200_OK)
+def list_organizations(db: Session = Depends(get_db)):
+    """
+    List all organizations.
+    # TODO: Restrict endpoint to authenticated user's organizations once auth exists.
+    """
+    organizations = db.query(Organization).order_by(Organization.created_at.desc()).all()
+    return organizations
+
+
 @router.post("/{id}/seed-categories", response_model=List[CategoryResponse], status_code=status.HTTP_200_OK)
 def seed_categories(id: UUID, db: Session = Depends(get_db)):
     """

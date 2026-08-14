@@ -7,7 +7,7 @@
 ```
 batch of transactions (vendor_raw, amount_cents, description)
   → prompt with a FIXED, closed category list (never let the model invent categories)
-  → Anthropic structured/schema-constrained output:
+  → Google Gemini structured/schema-constrained output:
       {transaction_id, category, confidence, reasoning}
   → Pydantic validation server-side:
       - category must be in the allowed set for this org, else reject
@@ -53,4 +53,4 @@ user question
 Each rule must be a pure, unit-testable function with fixed input/output fixtures.
 
 ## LLM client contract
-All LLM calls go through `apps/api/app/ai/llm_client.py` — no route handler or service calls the Anthropic SDK directly. This keeps prompts, retries, and validation centralized and testable, and keeps the provider swappable.
+All LLM calls go through `apps/api/app/ai/llm_client.py` — no route handler or service calls the Google Gemini SDK directly. This keeps prompts, retries, and validation centralized and testable, and keeps the provider swappable.

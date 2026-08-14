@@ -2,7 +2,7 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import List, Optional
 from uuid import UUID
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, Field, ConfigDict
 
 
 class RowError(BaseModel):
@@ -14,6 +14,13 @@ class CSVImportResponse(BaseModel):
     imported_count: int
     skipped_count: int
     errors: List[RowError]
+
+
+class TransactionReviewRequest(BaseModel):
+    action: str = Field(..., description="Action to perform: 'approve', 'edit', or 'reject'")
+    category_id: Optional[UUID] = Field(None, description="Category ID required if action is 'edit'")
+    # TODO: Replace user_id in payload with JWT-derived user once auth exists.
+    user_id: Optional[UUID] = Field(None, description="User ID performing the review")
 
 
 class TransactionResponse(BaseModel):

@@ -34,3 +34,4 @@ Follow this exactly. Do not add endpoints not listed here without updating this 
 - All list endpoints support pagination (`page`, `page_size`) and return `{items, total, page, page_size}`.
 - All error responses follow `{detail: string}` (FastAPI default) — don't invent a custom error shape.
 - Every route handler must scope its query by `organization_id` derived from the authenticated user's JWT, never from a client-supplied parameter.
+- `total_spend_cents` and category totals in `/reports/summary` are always positive magnitudes; `amount_cents` in the raw transactions table remains signed (negative=expense, positive=revenue).

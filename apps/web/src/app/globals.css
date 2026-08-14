@@ -1,3 +1,27 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-slate-950 text-slate-100 antialiased font-sans min-h-screen selection:bg-indigo-500 selection:text-white;
+  }
+}
+
+@layer utilities {
+  .badge-pending {
+    @apply bg-amber-500/10 text-amber-400 border border-amber-500/20 px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+  .badge-approved {
+    @apply bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+  .badge-edited {
+    @apply bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+  .badge-rejected {
+    @apply bg-rose-500/10 text-rose-400 border border-rose-500/20 px-2.5 py-0.5 rounded-full text-xs font-medium;
+  }
+  .glass-panel {
+    @apply bg-slate-900/60 backdrop-blur-xl border border-slate-800/80 rounded-xl shadow-xl;
+  }
+}

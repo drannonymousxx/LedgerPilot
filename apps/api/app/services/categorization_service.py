@@ -13,40 +13,13 @@ from app.ai.llm_client import llm_client
 logger = logging.getLogger(__name__)
 
 
-def _fallback_categorize_vendor(vendor_raw: str, description: Optional[str]) -> Tuple[str, float]:
-    """
-    Deterministic rule-based fallback when ANTHROPIC_API_KEY is not configured in dev/demo environment.
-    """
-    v_lower = (vendor_raw or "").lower()
-    d_lower = (description or "").lower()
-    text = f"{v_lower} {d_lower}"
-
-    if any(k in text for k in ["aws", "slack", "github", "google cloud", "zoom", "notion", "figma", "postmark", "openai", "adobe"]):
-        return "Software / Cloud", 0.90
-    elif any(k in text for k in ["uber", "airbnb", "flight", "hotel", "airline"]):
-        return "Travel", 0.85
-    elif any(k in text for k in ["stripe payout", "revenue", "customer", "invoice paid"]):
-        return "Revenue", 0.95
-    elif any(k in text for k in ["restaurant", "meal", "coffee", "food", "dining"]):
-        return "Meals & Entertainment", 0.80
-    elif any(k in text for k in ["paper", "supplies", "office", "desk"]):
-        return "Office Supplies", 0.80
-    elif any(k in text for k in ["payroll", "salary", "wages"]):
-        return "Payroll", 0.95
-    elif any(k in text for k in ["legal", "accounting", "consulting"]):
-        return "Professional Services", 0.85
-    elif any(k in text for k in ["ad", "ads", "marketing", "facebook ads"]):
-        return "Marketing", 0.85
-    return "Other", 0.50
-
-
-from typing import Tuple
-
 def categorize_transactions(
     db: Session, organization_id: UUID, transaction_ids: List[UUID]
 ) -> None:
     """
-    Batched transaction categorization using structured LLM output with fallback & confidence boosting.
+    Batched transaction categorization using structured LLM output with retry handling & confidence boosting.
+    Fails closed (ai_suggested_category_id=None, ai_confidence=0.0) if GEMINI_API_KEY is not configured
+    or if LLM calls / schema validations fail.
     """
     if not transaction_ids:
         return
@@ -134,8 +107,10 @@ def categorize_transactions(
                 except Exception as e:
                     logger.warning(f"Categorization LLM call attempt {attempt + 1} failed: {e}")
                     continue
+        else:
+            logger.warning("GEMINI_API_KEY is not configured. Categorization will fail closed.")
 
-        # Update transactions with categorization suggestions
+        # Update transactions with categorization suggestions or fail closed
         for tx in batch:
             suggested_cat_name = None
             reported_confidence = 0.0
@@ -144,13 +119,6 @@ def categorize_transactions(
                 item = llm_results[tx.id]
                 suggested_cat_name = item.category_name
                 reported_confidence = item.confidence
-            else:
-                # Rule-based fallback if LLM not configured or failed validation
-                fallback_name, fallback_conf = _fallback_categorize_vendor(
-                    tx.vendor_raw, tx.description
-                )
-                suggested_cat_name = fallback_name
-                reported_confidence = fallback_conf if not use_llm else 0.0
 
             cat_obj = allowed_name_map.get(suggested_cat_name.lower()) if suggested_cat_name else None
 
@@ -164,7 +132,7 @@ def categorize_transactions(
                 tx.ai_suggested_category_id = cat_obj.id
                 tx.ai_confidence = final_conf
             else:
-                # Fail closed on LLM failure
+                # Fail closed: no category assigned, confidence 0.0
                 tx.ai_suggested_category_id = None
                 tx.ai_confidence = 0.0
 

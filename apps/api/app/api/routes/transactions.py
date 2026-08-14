@@ -6,9 +6,15 @@ from sqlalchemy.orm import Session
 from app.core.db import get_db, SessionLocal
 from app.models.organization import Organization
 from app.models.transaction import Transaction
-from app.schemas.transaction import CSVImportResponse, PaginatedTransactionsResponse, TransactionResponse
+from app.schemas.transaction import (
+    CSVImportResponse,
+    PaginatedTransactionsResponse,
+    TransactionResponse,
+    TransactionReviewRequest,
+)
 from app.services.csv_import_service import import_transactions_csv
 from app.services.categorization_service import categorize_transactions
+from app.services.review_service import review_transaction
 
 router = APIRouter(prefix="/transactions", tags=["transactions"])
 
@@ -101,4 +107,27 @@ def list_transactions(
         total=total,
         page=page,
         page_size=page_size,
+    )
+
+
+@router.patch("/{id}/review", response_model=TransactionResponse, status_code=status.HTTP_200_OK)
+def review_transaction_endpoint(
+    id: UUID,
+    payload: TransactionReviewRequest,
+    # TODO: Replace temporary organization_id query parameter with JWT-derived org_id once auth exists.
+    organization_id: UUID = Query(..., description="Target Organization ID"),
+    # TODO: Replace temporary user_id query parameter with JWT-derived user_id once auth exists.
+    user_id: Optional[UUID] = Query(None, description="Reviewer User ID"),
+    db: Session = Depends(get_db),
+):
+    """
+    Approve, edit, or reject an AI-suggested transaction categorization.
+    """
+    reviewer_id = user_id or payload.user_id
+    return review_transaction(
+        db=db,
+        organization_id=organization_id,
+        transaction_id=id,
+        payload=payload,
+        reviewer_user_id=reviewer_id,
     )

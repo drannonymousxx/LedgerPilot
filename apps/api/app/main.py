@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
-from app.api.routes import transactions, organizations
+from app.api.routes import transactions, organizations, reports
 
 app = FastAPI(
     title="LedgerPilot API",
@@ -22,9 +22,9 @@ app.add_middleware(
 
 app.include_router(transactions.router)
 app.include_router(organizations.router)
+app.include_router(reports.router)
 
 
 @app.get("/health")
 def health_check():
     return {"status": "ok"}
-

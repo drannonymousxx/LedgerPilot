@@ -1,9 +1,13 @@
 import type { Metadata } from "next";
+import { Inter } from "next/font/google";
 import "./globals.css";
+import { OrganizationProvider } from "@/lib/org-context";
+
+const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "LedgerPilot",
-  description: "AI Financial Ledger Platform",
+  title: "LedgerPilot — AI Finance Ops Platform",
+  description: "AI-powered financial categorization and operations platform for startups",
 };
 
 export default function RootLayout({
@@ -13,7 +17,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body className={inter.className}>
+        <OrganizationProvider>{children}</OrganizationProvider>
+      </body>
     </html>
   );
 }

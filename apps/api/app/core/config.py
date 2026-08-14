@@ -4,9 +4,10 @@ from pydantic import field_validator
 
 
 class Settings(BaseSettings):
-    DATABASE_URL: str = "postgresql://postgres:postgres@localhost:5432/ledgerpilot"
+    DATABASE_URL: str = "postgresql://postgres:postgres@127.0.0.1:5432/ledgerpilot"
     CORS_ORIGINS: Union[str, List[str]] = ["http://localhost:3000"]
-    ANTHROPIC_API_KEY: Optional[str] = None
+    GEMINI_API_KEY: Optional[str] = None
+    GEMINI_MODEL: str = "gemini-flash-latest"
 
     @field_validator("CORS_ORIGINS", mode="before")
     @classmethod
