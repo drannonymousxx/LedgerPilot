@@ -1,0 +1,19 @@
+vendor,amount,date,description
+AWS,-450.25,2026-08-01,AWS Cloud Hosting
+aws,-1250.00,2026-08-02,EC2 Monthly Compute
+A.W.S.,-89.00,2026-08-03,Support plan
+   AWS   ,-12.00,2026-08-04,Data transfer
+Slack Technologies,-18.00,2026-08-03,Slack Business Pro Subscription
+Uber Technologies Inc.,-28.75,2026-08-05,Ride from airport
+Adobe Inc.,-52.99,2026-08-06,Creative Cloud All Apps
+Airbnb * Reservation,-320.00,2026-08-08,Team Offsite Lodging
+GitHub Inc,-21.00,2026-08-10,Team Plan Seats
+Google Cloud * Platform,-184.60,2026-08-11,BigQuery Data Analytics
+Stripe Payout,4500.00,2026-08-12,Customer Subscription Revenue
+Zoom.us,-149.90,2026-08-12,Annual Video Conferencing
+Notion Labs Inc,-40.00,2026-08-13,Workspace Subscription
+Figma,-96.00,2026-08-13,Design Team Organization Plan
+Postmark,-15.00,2026-08-14,Transactional Email Delivery
+OpenAI * API,-85.40,2026-08-14,LLM API Usage
+BAD_ROW_INVALID_DATE,-100.00,2026-99-99,Intentionally invalid date row
+BAD_ROW_INVALID_AMOUNT,INVALID_AMOUNT,2026-08-14,Intentionally invalid amount row
