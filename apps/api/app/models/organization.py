@@ -1,8 +1,13 @@
 import uuid
+import secrets
 from sqlalchemy import Column, String, DateTime, func
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from app.core.db import Base
+
+
+def generate_invite_code() -> str:
+    return secrets.token_hex(6)
 
 
 class Organization(Base):
@@ -10,9 +15,10 @@ class Organization(Base):
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     name = Column(String(255), nullable=False)
+    invite_code = Column(String(64), unique=True, nullable=False, default=generate_invite_code, index=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
-    users = relationship("User", back_populates="organization", cascade="all, delete-orphan")
+    members = relationship("OrganizationMember", back_populates="organization", cascade="all, delete-orphan")
     categories = relationship("Category", back_populates="organization", cascade="all, delete-orphan")
     vendors = relationship("Vendor", back_populates="organization", cascade="all, delete-orphan")
     transactions = relationship("Transaction", back_populates="organization", cascade="all, delete-orphan")

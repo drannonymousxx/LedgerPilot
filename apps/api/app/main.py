@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
-from app.api.routes import transactions, organizations, reports
+from app.api.routes import auth, transactions, organizations, reports
 
 app = FastAPI(
     title="LedgerPilot API",
@@ -20,6 +20,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(auth.router, prefix="/api/v1")
+app.include_router(transactions.router, prefix="/api/v1")
+app.include_router(organizations.router, prefix="/api/v1")
+app.include_router(reports.router, prefix="/api/v1")
+
+# Also include legacy un-prefixed routes for backwards compatibility if needed
+app.include_router(auth.router)
 app.include_router(transactions.router)
 app.include_router(organizations.router)
 app.include_router(reports.router)

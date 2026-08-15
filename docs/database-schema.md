@@ -15,17 +15,28 @@ This is the source of truth for the schema. Agents implementing models/migration
 CREATE TABLE organizations (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name TEXT NOT NULL,
+    invite_code TEXT UNIQUE NOT NULL DEFAULT encode(gen_random_bytes(6), 'hex'),
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
 CREATE TABLE users (
-    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-    organization_id UUID NOT NULL REFERENCES organizations(id),
+    id UUID PRIMARY KEY, -- Maps directly to Supabase User ID (sub)
     email TEXT UNIQUE NOT NULL,
-    hashed_password TEXT,
-    role TEXT NOT NULL DEFAULT 'owner',
+    full_name TEXT,
     created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+CREATE TABLE organization_members (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    organization_id UUID NOT NULL REFERENCES organizations(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    role TEXT NOT NULL DEFAULT 'member', -- owner | admin | accountant | viewer
+    status TEXT NOT NULL DEFAULT 'active', -- active | pending | revoked
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    UNIQUE (organization_id, user_id)
+);
+CREATE INDEX idx_org_members_user ON organization_members(user_id);
+CREATE INDEX idx_org_members_org ON organization_members(organization_id);
 
 CREATE TABLE categories (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

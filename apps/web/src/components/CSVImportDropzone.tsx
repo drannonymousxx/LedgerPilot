@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { api } from "@/lib/api";
+import { useAuth } from "@/lib/auth-context";
 import { useOrg } from "@/lib/org-context";
 import { CSVImportResponse } from "@/lib/types";
 
@@ -10,6 +11,7 @@ interface CSVImportDropzoneProps {
 }
 
 export function CSVImportDropzone({ onImportSuccess }: CSVImportDropzoneProps) {
+  const { token } = useAuth();
   const { activeOrg } = useOrg();
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -31,7 +33,7 @@ export function CSVImportDropzone({ onImportSuccess }: CSVImportDropzoneProps) {
     setResult(null);
 
     try {
-      const res = await api.importCSV(activeOrg.id, file);
+      const res = await api.importCSV(activeOrg.id, file, token);
       setResult(res);
       setFile(null);
       if (onImportSuccess) {

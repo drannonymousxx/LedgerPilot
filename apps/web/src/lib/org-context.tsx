@@ -3,8 +3,7 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
 import { Organization, Category } from "./types";
 import { api } from "./api";
-
-const STORAGE_KEY = "ledgerpilot_active_org_id";
+import { useAuth } from "./auth-context";
 
 interface OrgContextType {
   activeOrg: Organization | null;
@@ -20,85 +19,58 @@ interface OrgContextType {
 const OrgContext = createContext<OrgContextType | undefined>(undefined);
 
 export function OrganizationProvider({ children }: { children: React.ReactNode }) {
-  const [activeOrg, setActiveOrg] = useState<Organization | null>(null);
-  const [organizations, setOrganizations] = useState<Organization[]>([]);
+  const { activeOrg, memberships, token, selectOrg, createOrg: createOrgAuth, loading: authLoading } = useAuth();
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchCategoriesForOrg = useCallback(async (orgId: string) => {
-    try {
-      const cats = await api.getCategories(orgId);
-      setCategories(cats);
-    } catch (err: any) {
-      console.error("Failed to load categories:", err);
-    }
-  }, []);
+  const organizations: Organization[] = memberships.map((m) => ({
+    id: m.organization_id,
+    name: m.organization_name,
+    invite_code: m.invite_code,
+    role: m.role,
+  }));
 
-  const bootstrapOrg = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const orgList = await api.getOrganizations();
-      setOrganizations(orgList);
-
-      const savedOrgId = typeof window !== "undefined" ? localStorage.getItem(STORAGE_KEY) : null;
-      let targetOrg: Organization | null = null;
-
-      if (savedOrgId) {
-        targetOrg = orgList.find((o) => o.id === savedOrgId) || null;
+  const fetchCategoriesForOrg = useCallback(
+    async (orgId: string, authToken?: string | null) => {
+      try {
+        const cats = await api.getCategories(orgId, authToken);
+        setCategories(cats);
+      } catch (err: any) {
+        console.error("Failed to load categories for active org:", err);
       }
-
-      if (!targetOrg) {
-        if (orgList.length > 0) {
-          targetOrg = orgList[0];
-        } else {
-          // List-first-then-create pattern: only create if DB has 0 orgs
-          targetOrg = await api.createOrganization("LedgerPilot Demo Org");
-          setOrganizations([targetOrg]);
-        }
-
-        if (typeof window !== "undefined" && targetOrg) {
-          localStorage.setItem(STORAGE_KEY, targetOrg.id);
-        }
-      }
-
-      setActiveOrg(targetOrg);
-      if (targetOrg) {
-        await fetchCategoriesForOrg(targetOrg.id);
-      }
-    } catch (err: any) {
-      setError(err.message || "Failed to initialize organization context");
-    } finally {
-      setLoading(false);
-    }
-  }, [fetchCategoriesForOrg]);
+    },
+    []
+  );
 
   useEffect(() => {
-    bootstrapOrg();
-  }, [bootstrapOrg]);
+    if (activeOrg) {
+      setLoading(true);
+      fetchCategoriesForOrg(activeOrg.id, token).finally(() => setLoading(false));
+    } else {
+      setCategories([]);
+      setLoading(authLoading);
+    }
+  }, [activeOrg, token, authLoading, fetchCategoriesForOrg]);
 
   const selectOrganization = (orgId: string) => {
-    const selected = organizations.find((o) => o.id === orgId);
-    if (selected) {
-      setActiveOrg(selected);
-      if (typeof window !== "undefined") {
-        localStorage.setItem(STORAGE_KEY, selected.id);
-      }
-      fetchCategoriesForOrg(selected.id);
-    }
+    selectOrg(orgId);
   };
 
   const refreshCategories = async () => {
     if (activeOrg) {
-      await fetchCategoriesForOrg(activeOrg.id);
+      await fetchCategoriesForOrg(activeOrg.id, token);
     }
   };
 
   const createOrg = async (name: string): Promise<Organization> => {
-    const newOrg = await api.createOrganization(name);
-    setOrganizations((prev) => [newOrg, ...prev]);
-    selectOrganization(newOrg.id);
+    const mem = await createOrgAuth(name);
+    const newOrg: Organization = {
+      id: mem.organization_id,
+      name: mem.organization_name,
+      invite_code: mem.invite_code,
+      role: mem.role,
+    };
     return newOrg;
   };
 

@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
+import { useAuth } from "@/lib/auth-context";
 import { useOrg } from "@/lib/org-context";
 import { api } from "@/lib/api";
 import { SummaryResponse, Transaction } from "@/lib/types";
@@ -11,19 +12,21 @@ import { TransactionTable } from "@/components/TransactionTable";
 import { EditCategoryModal } from "@/components/EditCategoryModal";
 
 export default function DashboardOverviewPage() {
-  const { activeOrg, categories } = useOrg();
+  const { token, user, selectOrg } = useAuth();
+  const { activeOrg, organizations, categories } = useOrg();
   const [summary, setSummary] = useState<SummaryResponse | null>(null);
   const [recentTransactions, setRecentTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [editingTx, setEditingTx] = useState<Transaction | null>(null);
+  const [copiedCode, setCopiedCode] = useState(false);
 
   const loadDashboardData = useCallback(async () => {
-    if (!activeOrg) return;
+    if (!activeOrg || !token) return;
     setLoading(true);
     try {
       const [sumData, txData] = await Promise.all([
-        api.getDashboardSummary(activeOrg.id),
-        api.listTransactions(activeOrg.id, { page: 1, pageSize: 8 }),
+        api.getDashboardSummary(activeOrg.id, undefined, token),
+        api.listTransactions(activeOrg.id, { page: 1, pageSize: 8 }, token),
       ]);
       setSummary(sumData);
       setRecentTransactions(txData.items);
@@ -32,14 +35,14 @@ export default function DashboardOverviewPage() {
     } finally {
       setLoading(false);
     }
-  }, [activeOrg]);
+  }, [activeOrg, token]);
 
   useEffect(() => {
     loadDashboardData();
   }, [loadDashboardData]);
 
   const handleReviewAction = async (txId: string, action: "approve" | "edit" | "reject", categoryId?: string) => {
-    if (!activeOrg) return;
+    if (!activeOrg || !token) return;
     if (action === "edit" && !categoryId) {
       const txToEdit = recentTransactions.find((t) => t.id === txId);
       if (txToEdit) {
@@ -48,15 +51,23 @@ export default function DashboardOverviewPage() {
       return;
     }
 
-    await api.reviewTransaction(activeOrg.id, txId, { action, category_id: categoryId });
+    await api.reviewTransaction(activeOrg.id, txId, { action, category_id: categoryId }, token);
     await loadDashboardData();
   };
 
   const handleModalConfirmEdit = async (categoryId: string) => {
-    if (!activeOrg || !editingTx) return;
-    await api.reviewTransaction(activeOrg.id, editingTx.id, { action: "edit", category_id: categoryId });
+    if (!activeOrg || !editingTx || !token) return;
+    await api.reviewTransaction(activeOrg.id, editingTx.id, { action: "edit", category_id: categoryId }, token);
     setEditingTx(null);
     await loadDashboardData();
+  };
+
+  const copyInviteCode = () => {
+    if (activeOrg?.invite_code) {
+      navigator.clipboard.writeText(activeOrg.invite_code);
+      setCopiedCode(true);
+      setTimeout(() => setCopiedCode(false), 2000);
+    }
   };
 
   const formatCurrency = (cents: number) => {
@@ -65,24 +76,56 @@ export default function DashboardOverviewPage() {
 
   return (
     <div className="space-y-8">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-5">
+      {/* Top Bar with Org Selector & Actions */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-black/10 pb-6">
         <div>
-          <h1 className="text-2xl font-bold text-white tracking-tight">Finance Overview</h1>
-          <p className="text-sm text-slate-400">
-            {activeOrg?.name} {summary?.date_range?.start ? `• (${summary.date_range.start} to ${summary.date_range.end})` : ""}
+          <div className="flex items-center gap-3 mb-1">
+            <h1 className="text-2xl sm:text-3xl font-extrabold text-[#111111] tracking-tight">
+              Finance Overview
+            </h1>
+
+            {/* Organization Dropdown */}
+            {organizations.length > 1 && (
+              <select
+                value={activeOrg?.id || ""}
+                onChange={(e) => selectOrg(e.target.value)}
+                className="bg-white border border-black/15 text-xs font-semibold text-[#111111] rounded-lg px-2.5 py-1 focus:outline-none"
+              >
+                {organizations.map((org) => (
+                  <option key={org.id} value={org.id}>
+                    {org.name} ({org.role})
+                  </option>
+                ))}
+              </select>
+            )}
+          </div>
+
+          <p className="text-sm text-black/60 font-medium flex items-center gap-2">
+            <span>{activeOrg?.name}</span>
+            {activeOrg?.invite_code && (
+              <button
+                type="button"
+                onClick={copyInviteCode}
+                className="text-xs bg-black/5 hover:bg-black/10 text-black/70 border border-black/10 px-2 py-0.5 rounded font-mono transition-colors"
+                title="Click to copy invite code"
+              >
+                {copiedCode ? "✓ Copied!" : `Invite Code: ${activeOrg.invite_code}`}
+              </button>
+            )}
           </p>
         </div>
-        <div className="flex items-center gap-3">
+
+        <div className="flex items-center gap-3 flex-wrap">
           <button
             onClick={loadDashboardData}
-            className="px-3.5 py-2 text-xs font-semibold text-slate-300 hover:text-white bg-slate-900 border border-slate-800 hover:border-slate-700 rounded-lg transition-all"
+            className="px-3.5 py-2 text-xs font-semibold text-[#111111] bg-white border border-black/15 hover:bg-black/5 rounded-xl transition-all shadow-sm"
           >
             Refresh Data
           </button>
+
           <Link
             href="/dashboard/import"
-            className="px-4 py-2 text-sm font-semibold bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg shadow-lg shadow-indigo-600/30 transition-all flex items-center gap-2"
+            className="px-4 py-2 text-sm font-semibold bg-[#111111] hover:bg-black text-white rounded-xl shadow transition-all flex items-center gap-2"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
@@ -135,18 +178,38 @@ export default function DashboardOverviewPage() {
 
         <div className="lg:col-span-2 space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-bold text-white tracking-tight">Recent Transactions & Review Queue</h2>
+            <h2 className="text-lg font-bold text-[#111111] tracking-tight">Recent Transactions & Review Queue</h2>
             <Link
               href="/dashboard/transactions"
-              className="text-xs font-semibold text-indigo-400 hover:text-indigo-300 transition-colors flex items-center gap-1"
+              className="text-xs font-semibold text-[#111111] hover:underline transition-colors flex items-center gap-1"
             >
               View Full Queue →
             </Link>
           </div>
 
           {loading ? (
-            <div className="glass-panel p-8 text-center text-slate-500 text-sm">
-              Loading recent transactions...
+            <div className="bg-white border border-black/10 rounded-[24px] p-8 text-center text-black/50 text-sm">
+              Loading transactions from real database...
+            </div>
+          ) : recentTransactions.length === 0 ? (
+            <div className="bg-white border border-black/10 rounded-[24px] p-10 text-center space-y-4">
+              <div className="w-12 h-12 rounded-full bg-black/5 flex items-center justify-center mx-auto text-black/60">
+                <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 13h6m-3-3v6m-9 1V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-[#111111]">No Transactions Found</h3>
+                <p className="text-xs text-black/60 max-w-sm mx-auto mt-1">
+                  Your organization <strong className="text-black">{activeOrg?.name}</strong> has no transaction data yet. Import your first CSV to run AI categorization.
+                </p>
+              </div>
+              <Link
+                href="/dashboard/import"
+                className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#111111] hover:bg-black text-white text-xs font-bold rounded-full transition-all shadow-sm"
+              >
+                Import First CSV →
+              </Link>
             </div>
           ) : (
             <TransactionTable

@@ -4,6 +4,8 @@ from fastapi import APIRouter, BackgroundTasks, Depends, File, HTTPException, Qu
 from sqlalchemy.orm import Session
 
 from app.core.db import get_db, SessionLocal
+from app.core.auth import get_current_user, get_current_org_membership
+from app.models.user import User
 from app.models.organization import Organization
 from app.models.transaction import Transaction
 from app.schemas.transaction import (
@@ -34,23 +36,23 @@ def run_background_categorization(organization_id: UUID, transaction_ids: List[U
 @router.post("/import", response_model=CSVImportResponse, status_code=status.HTTP_200_OK)
 async def import_transactions(
     background_tasks: BackgroundTasks,
-    file: UploadFile = File(...),
-    # TODO: Replace temporary organization_id query parameter with JWT-derived org_id once auth exists.
     organization_id: UUID = Query(..., description="Target Organization ID"),
+    file: UploadFile = File(...),
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
+    # Enforce authentication & organization membership authorization
+    membership = get_current_org_membership(organization_id=organization_id, current_user=current_user, db=db)
+    if membership.role == "viewer":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Role 'viewer' does not have permission to import transactions",
+        )
+
     if not file.filename or not file.filename.lower().endswith(".csv"):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Only CSV files are supported",
-        )
-
-    # Verify organization exists
-    org = db.query(Organization).filter(Organization.id == organization_id).first()
-    if not org:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Organization not found",
         )
 
     content = await file.read()
@@ -69,17 +71,21 @@ async def import_transactions(
 
 @router.get("", response_model=PaginatedTransactionsResponse, status_code=status.HTTP_200_OK)
 def list_transactions(
-    # TODO: Replace temporary organization_id query parameter with JWT-derived org_id once auth exists.
     organization_id: UUID = Query(..., description="Target Organization ID"),
-    status_filter: Optional[str] = Query(None, alias="status", description="Filter by review status (pending/approved/rejected)"),
+    status_filter: Optional[str] = Query(None, alias="status", description="Filter by review status (pending/approved/edited/rejected)"),
     category_id: Optional[UUID] = Query(None, description="Filter by category ID"),
     page: int = Query(1, ge=1, description="Page number (1-indexed)"),
     page_size: int = Query(20, ge=1, le=100, description="Items per page"),
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """
     List and filter transactions for an organization with pagination.
+    Requires authentication and organization membership.
     """
+    # Enforce organization membership authorization (Rule #1 & Rule #14)
+    get_current_org_membership(organization_id=organization_id, current_user=current_user, db=db)
+
     # Base query MUST filter by organization_id (Rule #1)
     query = db.query(Transaction).filter(Transaction.organization_id == organization_id)
 
@@ -114,20 +120,25 @@ def list_transactions(
 def review_transaction_endpoint(
     id: UUID,
     payload: TransactionReviewRequest,
-    # TODO: Replace temporary organization_id query parameter with JWT-derived org_id once auth exists.
     organization_id: UUID = Query(..., description="Target Organization ID"),
-    # TODO: Replace temporary user_id query parameter with JWT-derived user_id once auth exists.
-    user_id: Optional[UUID] = Query(None, description="Reviewer User ID"),
+    current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
     """
     Approve, edit, or reject an AI-suggested transaction categorization.
+    Requires active organization membership with review privileges.
     """
-    reviewer_id = user_id or payload.user_id
+    membership = get_current_org_membership(organization_id=organization_id, current_user=current_user, db=db)
+    if membership.role == "viewer":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Role 'viewer' does not have permission to review transactions",
+        )
+
     return review_transaction(
         db=db,
         organization_id=organization_id,
         transaction_id=id,
         payload=payload,
-        reviewer_user_id=reviewer_id,
+        reviewer_user_id=current_user.id,
     )

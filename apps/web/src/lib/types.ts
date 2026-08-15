@@ -1,6 +1,29 @@
 export interface Organization {
   id: string;
   name: string;
+  invite_code?: string;
+  role?: string;
+}
+
+export interface UserProfile {
+  id: string;
+  email: string;
+  full_name?: string | null;
+}
+
+export interface OrgMembership {
+  id: string;
+  organization_id: string;
+  organization_name: string;
+  invite_code: string;
+  role: string;
+  status: string;
+}
+
+export interface AuthMeResponse {
+  user: UserProfile;
+  memberships: OrgMembership[];
+  has_organization: boolean;
 }
 
 export interface Category {

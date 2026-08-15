@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { useAuth } from "@/lib/auth-context";
 import { useOrg } from "@/lib/org-context";
 import { api } from "@/lib/api";
 import { Transaction } from "@/lib/types";
@@ -8,6 +9,7 @@ import { TransactionTable } from "@/components/TransactionTable";
 import { EditCategoryModal } from "@/components/EditCategoryModal";
 
 export default function TransactionsReviewQueuePage() {
+  const { token } = useAuth();
   const { activeOrg, categories } = useOrg();
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [total, setTotal] = useState<number>(0);
@@ -19,7 +21,7 @@ export default function TransactionsReviewQueuePage() {
   const [editingTx, setEditingTx] = useState<Transaction | null>(null);
 
   const fetchTransactions = useCallback(async () => {
-    if (!activeOrg) return;
+    if (!activeOrg || !token) return;
     setLoading(true);
     try {
       const res = await api.listTransactions(activeOrg.id, {
@@ -27,7 +29,7 @@ export default function TransactionsReviewQueuePage() {
         categoryId: categoryFilter || undefined,
         page,
         pageSize,
-      });
+      }, token);
       setTransactions(res.items);
       setTotal(res.total);
     } catch (err) {
@@ -35,14 +37,14 @@ export default function TransactionsReviewQueuePage() {
     } finally {
       setLoading(false);
     }
-  }, [activeOrg, statusFilter, categoryFilter, page, pageSize]);
+  }, [activeOrg, token, statusFilter, categoryFilter, page, pageSize]);
 
   useEffect(() => {
     fetchTransactions();
   }, [fetchTransactions]);
 
   const handleReviewAction = async (txId: string, action: "approve" | "edit" | "reject", categoryId?: string) => {
-    if (!activeOrg) return;
+    if (!activeOrg || !token) return;
     if (action === "edit" && !categoryId) {
       const txToEdit = transactions.find((t) => t.id === txId);
       if (txToEdit) {
@@ -51,13 +53,13 @@ export default function TransactionsReviewQueuePage() {
       return;
     }
 
-    await api.reviewTransaction(activeOrg.id, txId, { action, category_id: categoryId });
+    await api.reviewTransaction(activeOrg.id, txId, { action, category_id: categoryId }, token);
     await fetchTransactions();
   };
 
   const handleModalConfirmEdit = async (categoryId: string) => {
-    if (!activeOrg || !editingTx) return;
-    await api.reviewTransaction(activeOrg.id, editingTx.id, { action: "edit", category_id: categoryId });
+    if (!activeOrg || !editingTx || !token) return;
+    await api.reviewTransaction(activeOrg.id, editingTx.id, { action: "edit", category_id: categoryId }, token);
     setEditingTx(null);
     await fetchTransactions();
   };

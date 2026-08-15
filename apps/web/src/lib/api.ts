@@ -6,9 +6,11 @@ import {
   SummaryResponse,
   CSVImportResponse,
   TransactionReviewRequest,
+  AuthMeResponse,
+  OrgMembership,
 } from "./types";
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
 
 async function handleResponse<T>(res: Response): Promise<T> {
   if (!res.ok) {
@@ -19,39 +21,71 @@ async function handleResponse<T>(res: Response): Promise<T> {
         errorDetail = typeof data.detail === "string" ? data.detail : JSON.stringify(data.detail);
       }
     } catch {
-      // Failed to parse JSON error, use HTTP status text
+      // Failed to parse JSON error
     }
     throw new Error(errorDetail);
   }
   return res.json();
 }
 
+function getAuthHeaders(token?: string | null): Record<string, string> {
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+  return headers;
+}
+
 export const api = {
+  // Auth & User Synchronization
+  async getAuthMe(token: string): Promise<AuthMeResponse> {
+    const res = await fetch(`${API_BASE}/auth/me`, {
+      headers: getAuthHeaders(token),
+    });
+    return handleResponse<AuthMeResponse>(res);
+  },
+
+  async createOrgAuth(token: string, name: string): Promise<OrgMembership> {
+    const res = await fetch(`${API_BASE}/auth/create-org`, {
+      method: "POST",
+      headers: getAuthHeaders(token),
+      body: JSON.stringify({ name }),
+    });
+    return handleResponse<OrgMembership>(res);
+  },
+
+  async joinOrgAuth(token: string, inviteCodeOrId: string): Promise<OrgMembership> {
+    const res = await fetch(`${API_BASE}/auth/join-org`, {
+      method: "POST",
+      headers: getAuthHeaders(token),
+      body: JSON.stringify({ invite_code_or_id: inviteCodeOrId }),
+    });
+    return handleResponse<OrgMembership>(res);
+  },
+
   // Organizations
-  async getOrganizations(): Promise<Organization[]> {
-    const res = await fetch(`${API_BASE}/organizations`);
+  async getOrganizations(token?: string | null): Promise<Organization[]> {
+    const res = await fetch(`${API_BASE}/organizations`, {
+      headers: getAuthHeaders(token),
+    });
     return handleResponse<Organization[]>(res);
   },
 
-  async createOrganization(name: string): Promise<Organization> {
-    const res = await fetch(`${API_BASE}/organizations`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name }),
-    });
-    return handleResponse<Organization>(res);
-  },
-
   // Categories
-  async getCategories(organizationId: string): Promise<Category[]> {
-    const res = await fetch(`${API_BASE}/organizations/${organizationId}/categories`);
+  async getCategories(organizationId: string, token?: string | null): Promise<Category[]> {
+    const res = await fetch(`${API_BASE}/organizations/${organizationId}/categories`, {
+      headers: getAuthHeaders(token),
+    });
     return handleResponse<Category[]>(res);
   },
 
   // Transactions
   async listTransactions(
     organizationId: string,
-    params?: { status?: string; categoryId?: string; page?: number; pageSize?: number }
+    params?: { status?: string; categoryId?: string; page?: number; pageSize?: number },
+    token?: string | null
   ): Promise<PaginatedTransactionsResponse> {
     const searchParams = new URLSearchParams({ organization_id: organizationId });
     if (params?.status && params.status !== "all") {
@@ -67,16 +101,24 @@ export const api = {
       searchParams.append("page_size", params.pageSize.toString());
     }
 
-    const res = await fetch(`${API_BASE}/transactions?${searchParams.toString()}`);
+    const res = await fetch(`${API_BASE}/transactions?${searchParams.toString()}`, {
+      headers: getAuthHeaders(token),
+    });
     return handleResponse<PaginatedTransactionsResponse>(res);
   },
 
-  async importCSV(organizationId: string, file: File): Promise<CSVImportResponse> {
+  async importCSV(organizationId: string, file: File, token?: string | null): Promise<CSVImportResponse> {
     const formData = new FormData();
     formData.append("file", file);
 
+    const headers: Record<string, string> = {};
+    if (token) {
+      headers["Authorization"] = `Bearer ${token}`;
+    }
+
     const res = await fetch(`${API_BASE}/transactions/import?organization_id=${organizationId}`, {
       method: "POST",
+      headers,
       body: formData,
     });
     return handleResponse<CSVImportResponse>(res);
@@ -85,16 +127,14 @@ export const api = {
   async reviewTransaction(
     organizationId: string,
     transactionId: string,
-    reviewReq: TransactionReviewRequest
+    reviewReq: TransactionReviewRequest,
+    token?: string | null
   ): Promise<Transaction> {
     const searchParams = new URLSearchParams({ organization_id: organizationId });
-    if (reviewReq.user_id) {
-      searchParams.append("user_id", reviewReq.user_id);
-    }
 
     const res = await fetch(`${API_BASE}/transactions/${transactionId}/review?${searchParams.toString()}`, {
       method: "PATCH",
-      headers: { "Content-Type": "application/json" },
+      headers: getAuthHeaders(token),
       body: JSON.stringify(reviewReq),
     });
     return handleResponse<Transaction>(res);
@@ -103,13 +143,16 @@ export const api = {
   // Reports
   async getDashboardSummary(
     organizationId: string,
-    params?: { startDate?: string; endDate?: string }
+    params?: { startDate?: string; endDate?: string },
+    token?: string | null
   ): Promise<SummaryResponse> {
     const searchParams = new URLSearchParams({ organization_id: organizationId });
     if (params?.startDate) searchParams.append("start_date", params.startDate);
     if (params?.endDate) searchParams.append("end_date", params.endDate);
 
-    const res = await fetch(`${API_BASE}/reports/summary?${searchParams.toString()}`);
+    const res = await fetch(`${API_BASE}/reports/summary?${searchParams.toString()}`, {
+      headers: getAuthHeaders(token),
+    });
     return handleResponse<SummaryResponse>(res);
   },
 };
