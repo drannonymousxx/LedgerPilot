@@ -1,5 +1,6 @@
 import {
   Organization,
+  UserProfile,
   Category,
   Transaction,
   PaginatedTransactionsResponse,
@@ -8,6 +9,9 @@ import {
   TransactionReviewRequest,
   AuthMeResponse,
   OrgMembership,
+  InitialInviteRequest,
+  TeamMember,
+  ChatMessage,
 } from "./types";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
@@ -47,22 +51,45 @@ export const api = {
     return handleResponse<AuthMeResponse>(res);
   },
 
-  async createOrgAuth(token: string, name: string): Promise<OrgMembership> {
+  async createOrgAuth(
+    token: string,
+    name: string,
+    password?: string,
+    initialInvitations?: InitialInviteRequest[]
+  ): Promise<OrgMembership> {
     const res = await fetch(`${API_BASE}/auth/create-org`, {
       method: "POST",
       headers: getAuthHeaders(token),
-      body: JSON.stringify({ name }),
+      body: JSON.stringify({ name, password, initial_invitations: initialInvitations || [] }),
     });
     return handleResponse<OrgMembership>(res);
   },
 
-  async joinOrgAuth(token: string, inviteCodeOrId: string): Promise<OrgMembership> {
+  async joinOrgAuth(
+    token: string,
+    inviteCodeOrId: string,
+    password?: string,
+    requestedRole?: string
+  ): Promise<OrgMembership> {
     const res = await fetch(`${API_BASE}/auth/join-org`, {
       method: "POST",
       headers: getAuthHeaders(token),
-      body: JSON.stringify({ invite_code_or_id: inviteCodeOrId }),
+      body: JSON.stringify({
+        invite_code_or_id: inviteCodeOrId,
+        password: password || undefined,
+        requested_role: requestedRole || "accountant",
+      }),
     });
     return handleResponse<OrgMembership>(res);
+  },
+
+  async updateUserProfile(token: string, fullName: string): Promise<UserProfile> {
+    const res = await fetch(`${API_BASE}/auth/profile`, {
+      method: "PUT",
+      headers: getAuthHeaders(token),
+      body: JSON.stringify({ full_name: fullName }),
+    });
+    return handleResponse<UserProfile>(res);
   },
 
   // Organizations
@@ -71,6 +98,58 @@ export const api = {
       headers: getAuthHeaders(token),
     });
     return handleResponse<Organization[]>(res);
+  },
+
+  async setOrganizationPassword(
+    organizationId: string,
+    newPassword: string,
+    token?: string | null
+  ): Promise<{ status: string; message: string; has_password: boolean }> {
+    const res = await fetch(`${API_BASE}/organizations/${organizationId}/password`, {
+      method: "POST",
+      headers: getAuthHeaders(token),
+      body: JSON.stringify({ new_password: newPassword }),
+    });
+    return handleResponse<{ status: string; message: string; has_password: boolean }>(res);
+  },
+
+  async inviteOrganizationMember(
+    organizationId: string,
+    email: string,
+    name?: string,
+    role?: string,
+    token?: string | null
+  ): Promise<TeamMember> {
+    const res = await fetch(`${API_BASE}/organizations/${organizationId}/invitations`, {
+      method: "POST",
+      headers: getAuthHeaders(token),
+      body: JSON.stringify({ email, name: name || undefined, role: role || "accountant" }),
+    });
+    return handleResponse<TeamMember>(res);
+  },
+
+  async getOrganizationMembers(organizationId: string, token?: string | null): Promise<TeamMember[]> {
+    const res = await fetch(`${API_BASE}/organizations/${organizationId}/members`, {
+      headers: getAuthHeaders(token),
+    });
+    return handleResponse<TeamMember[]>(res);
+  },
+
+  // Community Chat
+  async getOrganizationMessages(organizationId: string, token?: string | null): Promise<ChatMessage[]> {
+    const res = await fetch(`${API_BASE}/organizations/${organizationId}/messages`, {
+      headers: getAuthHeaders(token),
+    });
+    return handleResponse<ChatMessage[]>(res);
+  },
+
+  async sendOrganizationMessage(organizationId: string, message: string, token?: string | null): Promise<ChatMessage> {
+    const res = await fetch(`${API_BASE}/organizations/${organizationId}/messages`, {
+      method: "POST",
+      headers: getAuthHeaders(token),
+      body: JSON.stringify({ message }),
+    });
+    return handleResponse<ChatMessage>(res);
   },
 
   // Categories

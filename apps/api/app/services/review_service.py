@@ -9,8 +9,10 @@ from app.models.transaction import Transaction
 from app.models.vendor import Vendor
 from app.models.category import Category
 from app.models.user import User
+from app.models.organization_member import OrganizationMember
 from app.models.audit_log import AuditLog
 from app.schemas.transaction import TransactionReviewRequest
+
 
 logger = logging.getLogger(__name__)
 
@@ -49,15 +51,19 @@ def review_transaction(
     # Verify user exists in organization if user_id was supplied (to respect foreign key)
     valid_user_id = None
     if active_user_id:
-        user_obj = (
-            db.query(User)
-            .filter(User.organization_id == organization_id, User.id == active_user_id)
+        member_obj = (
+            db.query(OrganizationMember)
+            .filter(
+                OrganizationMember.organization_id == organization_id,
+                OrganizationMember.user_id == active_user_id,
+            )
             .first()
         )
-        if user_obj:
+        if member_obj:
             valid_user_id = active_user_id
         else:
-            logger.info(f"User ID {active_user_id} not found in users table. Storing None for user_id.")
+            logger.info(f"User ID {active_user_id} not found in organization members. Storing None for user_id.")
+
 
     # Capture state before modification for audit log
     before_value = {

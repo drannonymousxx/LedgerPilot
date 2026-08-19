@@ -25,31 +25,44 @@ export function TransactionTable({ transactions, categories, onReviewAction }: T
   const getStatusBadge = (status: Transaction["review_status"]) => {
     switch (status) {
       case "approved":
-        return <span className="badge-approved">Approved</span>;
+        return (
+          <span className="px-2.5 py-0.5 rounded-md bg-[#111111] text-white text-[10px] font-extrabold uppercase tracking-wide">
+            Approved
+          </span>
+        );
       case "edited":
-        return <span className="badge-edited">Edited</span>;
+        return (
+          <span className="px-2.5 py-0.5 rounded-md bg-[#F8F7F2] border border-black/15 text-[#111111] text-[10px] font-extrabold uppercase tracking-wide">
+            Edited
+          </span>
+        );
       case "rejected":
-        return <span className="badge-rejected">Rejected</span>;
+        return (
+          <span className="px-2.5 py-0.5 rounded-md bg-black/5 text-black/40 border border-black/10 text-[10px] font-extrabold uppercase tracking-wide line-through">
+            Rejected
+          </span>
+        );
       default:
-        return <span className="badge-pending">Pending Review</span>;
+        return (
+          <span className="px-2.5 py-0.5 rounded-md bg-black/5 text-black/60 border border-black/10 text-[10px] font-extrabold uppercase tracking-wide">
+            Pending
+          </span>
+        );
     }
   };
 
   const getConfidenceBadge = (confidence?: number | string | null) => {
     if (confidence === undefined || confidence === null) {
-      return <span className="text-xs text-slate-500 font-mono">Unassigned</span>;
+      return <span className="text-xs text-black/40 font-mono">—</span>;
     }
     const val = typeof confidence === "string" ? parseFloat(confidence) : Number(confidence);
     if (isNaN(val) || val <= 0) {
-      return <span className="text-xs text-slate-500 font-mono">Unassigned</span>;
+      return <span className="text-xs text-black/40 font-mono">—</span>;
     }
     const scorePct = Math.round(val * 100);
-    let colorClass = "bg-emerald-500/10 text-emerald-400 border-emerald-500/20";
-    if (scorePct < 60) colorClass = "bg-rose-500/10 text-rose-400 border-rose-500/20";
-    else if (scorePct < 85) colorClass = "bg-amber-500/10 text-amber-400 border-amber-500/20";
 
     return (
-      <span className={`px-2 py-0.5 rounded text-[11px] font-mono border ${colorClass}`}>
+      <span className="px-2 py-0.5 rounded text-[11px] font-mono border border-black/15 bg-[#F8F7F2] text-[#111111] font-semibold">
         {scorePct}%
       </span>
     );
@@ -66,17 +79,17 @@ export function TransactionTable({ transactions, categories, onReviewAction }: T
 
   if (transactions.length === 0) {
     return (
-      <div className="glass-panel p-12 text-center text-slate-500 text-sm">
-        No transactions found matching the current filter. Upload a CSV or select another status filter.
+      <div className="bg-white border border-black/10 rounded-2xl p-12 text-center text-black/50 text-xs shadow-sm font-medium">
+        No transactions found matching the current filter.
       </div>
     );
   }
 
   return (
-    <div className="glass-panel overflow-hidden">
+    <div className="bg-white border border-black/10 rounded-2xl shadow-sm overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full text-left text-sm">
-          <thead className="bg-slate-950/60 border-b border-slate-800 text-xs uppercase font-semibold text-slate-400">
+          <thead className="bg-[#F8F7F2] border-b border-black/10 text-[11px] uppercase font-bold text-black/60">
             <tr>
               <th className="py-3.5 px-4">Date</th>
               <th className="py-3.5 px-4">Vendor</th>
@@ -88,7 +101,7 @@ export function TransactionTable({ transactions, categories, onReviewAction }: T
               <th className="py-3.5 px-4 text-right">Actions</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-800/60 text-slate-200">
+          <tbody className="divide-y divide-black/5 text-[#111111]">
             {transactions.map((tx) => {
               const suggestedCatName = tx.ai_suggested_category_id
                 ? categoryMap.get(tx.ai_suggested_category_id) || "Unknown"
@@ -100,27 +113,23 @@ export function TransactionTable({ transactions, categories, onReviewAction }: T
               const isLoading = loadingTxId === tx.id;
 
               return (
-                <tr key={tx.id} className="hover:bg-slate-800/30 transition-colors">
-                  <td className="py-3.5 px-4 whitespace-nowrap text-slate-400 font-mono text-xs">
+                <tr key={tx.id} className="hover:bg-[#F8F7F2]/60 transition-colors">
+                  <td className="py-3.5 px-4 whitespace-nowrap text-black/60 font-mono text-xs">
                     {tx.transaction_date}
                   </td>
-                  <td className="py-3.5 px-4 whitespace-nowrap font-medium text-white">
+                  <td className="py-3.5 px-4 whitespace-nowrap font-bold text-[#111111]">
                     {tx.vendor_raw || "Unknown Vendor"}
                   </td>
-                  <td
-                    className={`py-3.5 px-4 whitespace-nowrap font-semibold font-mono ${
-                      tx.amount_cents < 0 ? "text-rose-400" : "text-emerald-400"
-                    }`}
-                  >
+                  <td className="py-3.5 px-4 whitespace-nowrap font-bold font-mono text-[#111111]">
                     {formatCurrency(tx.amount_cents)}
                   </td>
-                  <td className="py-3.5 px-4 whitespace-nowrap text-slate-300 font-medium">
+                  <td className="py-3.5 px-4 whitespace-nowrap font-medium text-[#111111]">
                     {suggestedCatName}
                   </td>
                   <td className="py-3.5 px-4 whitespace-nowrap">
                     {getConfidenceBadge(tx.ai_confidence)}
                   </td>
-                  <td className="py-3.5 px-4 whitespace-nowrap text-slate-300 font-medium">
+                  <td className="py-3.5 px-4 whitespace-nowrap font-medium text-[#111111]">
                     {finalCatName}
                   </td>
                   <td className="py-3.5 px-4 whitespace-nowrap">
@@ -128,34 +137,36 @@ export function TransactionTable({ transactions, categories, onReviewAction }: T
                   </td>
                   <td className="py-3.5 px-4 whitespace-nowrap text-right space-x-1.5">
                     {isLoading ? (
-                      <span className="text-xs text-slate-500">Updating...</span>
+                      <span className="text-xs text-black/40 font-mono">Updating...</span>
                     ) : (
                       <>
                         <button
                           onClick={() => handleAction(tx.id, "approve")}
-                          disabled={!tx.ai_suggested_category_id && !tx.final_category_id}
-                          className="px-2.5 py-1 text-xs font-medium bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-md transition-colors disabled:opacity-30"
+                          disabled={(!tx.ai_suggested_category_id && !tx.final_category_id) || tx.review_status === "approved"}
+                          className="px-2.5 py-1 text-xs font-bold bg-[#111111] hover:bg-black text-white rounded-lg transition-all shadow-sm disabled:opacity-30"
                           title="Approve AI suggestion"
                         >
-                          Approve
+                          {tx.review_status === "approved" ? "Approved ✓" : "Approve"}
                         </button>
                         <button
                           onClick={() => handleAction(tx.id, "edit")}
-                          className="px-2.5 py-1 text-xs font-medium bg-indigo-500/10 hover:bg-indigo-500/20 text-indigo-400 border border-indigo-500/30 rounded-md transition-colors"
+                          className="px-2.5 py-1 text-xs font-semibold bg-white hover:bg-black/5 text-[#111111] border border-black/15 rounded-lg transition-all shadow-sm"
                           title="Edit Category"
                         >
-                          Edit
+                          {tx.review_status === "edited" ? "Edited" : "Edit"}
                         </button>
                         <button
                           onClick={() => handleAction(tx.id, "reject")}
-                          className="px-2.5 py-1 text-xs font-medium bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 rounded-md transition-colors"
+                          disabled={tx.review_status === "rejected"}
+                          className="px-2.5 py-1 text-xs font-semibold bg-white hover:bg-black/5 text-black/60 border border-black/15 rounded-lg transition-all shadow-sm disabled:opacity-40"
                           title="Reject"
                         >
-                          Reject
+                          {tx.review_status === "rejected" ? "Rejected" : "Reject"}
                         </button>
                       </>
                     )}
                   </td>
+
                 </tr>
               );
             })}
@@ -165,3 +176,4 @@ export function TransactionTable({ transactions, categories, onReviewAction }: T
     </div>
   );
 }
+

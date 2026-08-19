@@ -2,10 +2,12 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useAuth } from "@/lib/auth-context";
 
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { session, activeOrg, signOut } = useAuth();
 
   useEffect(() => {
@@ -23,7 +25,7 @@ export function Navbar() {
   }, []);
 
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 flex justify-center px-4 pt-3 transition-all duration-300 pointer-events-none">
+    <header className="fixed top-0 left-0 right-0 z-50 flex flex-col items-center px-4 pt-3 transition-all duration-300 pointer-events-none">
       <nav
         className={`pointer-events-auto flex items-center justify-between transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] ${
           scrolled
@@ -33,18 +35,15 @@ export function Navbar() {
       >
         {/* Left Side: Brand Logo & Navigation Links */}
         <div className="flex items-center gap-4 sm:gap-6">
-          <Link href="/" className="flex items-center gap-2 font-black tracking-tight text-[#111111] group">
-            {/* Black Triangle Logo */}
-            <svg
-              className={`transition-all duration-300 ${scrolled ? "w-4 h-4" : "w-5 h-5"} text-[#111111]`}
-              viewBox="0 0 24 24"
-              fill="currentColor"
-            >
-              <path d="M12 3L2 20h20L12 3z" />
-            </svg>
-            <span className={`font-extrabold tracking-tight transition-all duration-300 text-[#111111] ${scrolled ? "text-sm" : "text-base"}`}>
-              LedgerPilot
-            </span>
+          <Link href="/" className="flex items-center group">
+            <Image
+              src="/logo/logoblack.png"
+              alt="LedgerPilot"
+              width={scrolled ? 110 : 130}
+              height={scrolled ? 28 : 34}
+              priority
+              className="object-contain transition-all duration-300 h-7 sm:h-8 w-auto"
+            />
           </Link>
 
           <div className={`h-4 w-[1px] bg-black/20 ${scrolled ? "mx-1" : "mx-2"}`} />
@@ -65,7 +64,7 @@ export function Navbar() {
           </div>
         </div>
 
-        {/* Right Side: Auth / CTA Buttons */}
+        {/* Right Side: Auth / CTA Buttons & Mobile Toggle */}
         <div className="flex items-center gap-3 sm:gap-4">
           {session && activeOrg ? (
             <>
@@ -107,8 +106,77 @@ export function Navbar() {
               </Link>
             </>
           )}
+
+          {/* Mobile Menu Toggle Button */}
+          <button
+            type="button"
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="md:hidden p-1.5 text-[#111111] hover:text-black focus:outline-none"
+            aria-label="Toggle Navigation Menu"
+          >
+            {mobileMenuOpen ? (
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            ) : (
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            )}
+          </button>
         </div>
       </nav>
+
+      {/* Mobile Navigation Dropdown */}
+      {mobileMenuOpen && (
+        <div className="pointer-events-auto w-full max-w-[90vw] mt-2 bg-[#F4F3ED] border border-black/15 rounded-2xl p-4 shadow-xl md:hidden flex flex-col space-y-3 font-semibold text-sm text-[#111111]">
+          <Link
+            href="#product"
+            onClick={() => setMobileMenuOpen(false)}
+            className="hover:text-black py-1"
+          >
+            Product
+          </Link>
+          <Link
+            href="#how-it-works"
+            onClick={() => setMobileMenuOpen(false)}
+            className="hover:text-black py-1"
+          >
+            How It Works
+          </Link>
+          <Link
+            href="#security"
+            onClick={() => setMobileMenuOpen(false)}
+            className="hover:text-black py-1"
+          >
+            Security
+          </Link>
+          <Link
+            href="#pricing"
+            onClick={() => setMobileMenuOpen(false)}
+            className="hover:text-black py-1"
+          >
+            Pricing
+          </Link>
+          <div className="border-t border-black/10 pt-2 flex items-center justify-between">
+            <Link
+              href="/auth"
+              onClick={() => setMobileMenuOpen(false)}
+              className="text-xs font-bold text-[#111111]"
+            >
+              Sign In
+            </Link>
+            <Link
+              href="/auth"
+              onClick={() => setMobileMenuOpen(false)}
+              className="px-4 py-1.5 bg-[#111111] text-white text-xs font-bold rounded-full"
+            >
+              Get Started
+            </Link>
+          </div>
+        </div>
+      )}
     </header>
   );
 }
+

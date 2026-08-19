@@ -59,8 +59,9 @@ export function PricingSection() {
   return (
     <section
       id="pricing"
-      className="w-full py-16 sm:py-24 px-4 sm:px-6 lg:px-10 max-w-[1340px] mx-auto border-t border-black/5"
+      className="w-full py-16 sm:py-24 px-4 sm:px-6 lg:px-10 max-w-[1340px] mx-auto border-t border-black/5 scroll-mt-24"
     >
+
       {/* Section Header */}
       <div className="flex flex-col items-center text-center mb-12 sm:mb-16">
         {/* Heading */}

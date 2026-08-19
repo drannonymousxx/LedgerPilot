@@ -13,6 +13,28 @@ from app.core.db import get_db
 from app.models.user import User
 from app.models.organization_member import OrganizationMember
 
+import bcrypt
+
+
+def hash_password(password: str) -> str:
+    """Hashes an organization password securely using bcrypt."""
+    pw_bytes = password.encode("utf-8")[:72]  # Truncate to bcrypt 72-byte max length
+    salt = bcrypt.gensalt()
+    return bcrypt.hashpw(pw_bytes, salt).decode("utf-8")
+
+
+def verify_password(plain_password: str, hashed_password: str) -> bool:
+    """Verifies a plain organization password against its stored bcrypt hash."""
+    if not hashed_password or not plain_password:
+        return False
+    try:
+        pw_bytes = plain_password.encode("utf-8")[:72]
+        hash_bytes = hashed_password.encode("utf-8")
+        return bcrypt.checkpw(pw_bytes, hash_bytes)
+    except Exception:
+        return False
+
+
 security_bearer = HTTPBearer(auto_error=False)
 
 

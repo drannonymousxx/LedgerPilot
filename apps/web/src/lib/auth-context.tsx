@@ -3,7 +3,7 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
 import { Session } from "@supabase/supabase-js";
 import { supabase } from "./supabase";
-import { UserProfile, OrgMembership, Organization } from "./types";
+import { UserProfile, OrgMembership, Organization, InitialInviteRequest } from "./types";
 import { api } from "./api";
 
 const STORAGE_ACTIVE_ORG = "ledgerpilot_active_org_id";
@@ -18,8 +18,8 @@ interface AuthContextType {
   loading: boolean;
   signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
-  createOrg: (name: string) => Promise<OrgMembership>;
-  joinOrg: (code: string) => Promise<OrgMembership>;
+  createOrg: (name: string, password?: string, initialInvitations?: InitialInviteRequest[]) => Promise<OrgMembership>;
+  joinOrg: (nameOrCode: string, password?: string, requestedRole?: string) => Promise<OrgMembership>;
   selectOrg: (orgId: string) => void;
   refreshAuth: () => Promise<void>;
 }
@@ -52,6 +52,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           id: matched.organization_id,
           name: matched.organization_name,
           invite_code: matched.invite_code,
+          has_password: matched.has_password,
           role: matched.role,
         };
         setActiveOrg(selected);
@@ -129,15 +130,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setActiveOrg(null);
   };
 
-  const createOrg = async (name: string): Promise<OrgMembership> => {
+  const createOrg = async (
+    name: string,
+    password?: string,
+    initialInvitations?: InitialInviteRequest[]
+  ): Promise<OrgMembership> => {
     if (!token) throw new Error("Authentication required");
-    const newMembership = await api.createOrgAuth(token, name);
+    const newMembership = await api.createOrgAuth(token, name, password, initialInvitations);
     setMemberships((prev) => [newMembership, ...prev]);
 
     const newOrg: Organization = {
       id: newMembership.organization_id,
       name: newMembership.organization_name,
       invite_code: newMembership.invite_code,
+      has_password: newMembership.has_password,
       role: newMembership.role,
     };
     setActiveOrg(newOrg);
@@ -147,15 +153,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return newMembership;
   };
 
-  const joinOrg = async (code: string): Promise<OrgMembership> => {
+  const joinOrg = async (
+    nameOrCode: string,
+    password?: string,
+    requestedRole?: string
+  ): Promise<OrgMembership> => {
     if (!token) throw new Error("Authentication required");
-    const newMembership = await api.joinOrgAuth(token, code);
+    const newMembership = await api.joinOrgAuth(token, nameOrCode, password, requestedRole);
     setMemberships((prev) => [newMembership, ...prev.filter((m) => m.id !== newMembership.id)]);
 
     const newOrg: Organization = {
       id: newMembership.organization_id,
       name: newMembership.organization_name,
       invite_code: newMembership.invite_code,
+      has_password: newMembership.has_password,
       role: newMembership.role,
     };
     setActiveOrg(newOrg);
@@ -172,6 +183,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         id: found.organization_id,
         name: found.organization_name,
         invite_code: found.invite_code,
+        has_password: found.has_password,
         role: found.role,
       };
       setActiveOrg(selected);

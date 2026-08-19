@@ -2,6 +2,7 @@ export interface Organization {
   id: string;
   name: string;
   invite_code?: string;
+  has_password?: boolean;
   role?: string;
 }
 
@@ -16,6 +17,7 @@ export interface OrgMembership {
   organization_id: string;
   organization_name: string;
   invite_code: string;
+  has_password?: boolean;
   role: string;
   status: string;
 }
@@ -24,6 +26,34 @@ export interface AuthMeResponse {
   user: UserProfile;
   memberships: OrgMembership[];
   has_organization: boolean;
+}
+
+export interface InitialInviteRequest {
+  name: string;
+  email: string;
+  role?: string;
+}
+
+export interface TeamMember {
+  id: string;
+  user_id?: string | null;
+  name: string;
+  email: string;
+  role: string;
+  status: string;
+  is_pending: boolean;
+  created_at: string;
+}
+
+export interface ChatMessage {
+  id: string;
+  organization_id: string;
+  sender_user_id: string;
+  sender_name: string;
+  sender_email: string;
+  sender_role: string;
+  message: string;
+  created_at: string;
 }
 
 export interface Category {

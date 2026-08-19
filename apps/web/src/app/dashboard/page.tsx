@@ -10,6 +10,8 @@ import { KPICard } from "@/components/KPICard";
 import { CategoryBreakdownCard } from "@/components/CategoryBreakdownCard";
 import { TransactionTable } from "@/components/TransactionTable";
 import { EditCategoryModal } from "@/components/EditCategoryModal";
+import { TeamCard } from "@/components/TeamCard";
+import { CommunityChat } from "@/components/CommunityChat";
 
 export default function DashboardOverviewPage() {
   const { token, user, selectOrg } = useAuth();
@@ -38,6 +40,7 @@ export default function DashboardOverviewPage() {
   }, [activeOrg, token]);
 
   useEffect(() => {
+    window.scrollTo(0, 0);
     loadDashboardData();
   }, [loadDashboardData]);
 
@@ -89,7 +92,7 @@ export default function DashboardOverviewPage() {
               <select
                 value={activeOrg?.id || ""}
                 onChange={(e) => selectOrg(e.target.value)}
-                className="bg-white border border-black/15 text-xs font-semibold text-[#111111] rounded-lg px-2.5 py-1 focus:outline-none"
+                className="bg-white border border-black/15 text-xs font-semibold text-[#111111] rounded-xl px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-black"
               >
                 {organizations.map((org) => (
                   <option key={org.id} value={org.id}>
@@ -100,13 +103,13 @@ export default function DashboardOverviewPage() {
             )}
           </div>
 
-          <p className="text-sm text-black/60 font-medium flex items-center gap-2">
+          <p className="text-sm text-black/60 font-medium flex items-center gap-2 mt-1">
             <span>{activeOrg?.name}</span>
             {activeOrg?.invite_code && (
               <button
                 type="button"
                 onClick={copyInviteCode}
-                className="text-xs bg-black/5 hover:bg-black/10 text-black/70 border border-black/10 px-2 py-0.5 rounded font-mono transition-colors"
+                className="text-xs bg-[#F8F7F2] hover:bg-black/5 text-[#111111] border border-black/15 px-2.5 py-1 rounded-lg font-mono font-semibold transition-colors shadow-sm"
                 title="Click to copy invite code"
               >
                 {copiedCode ? "✓ Copied!" : `Invite Code: ${activeOrg.invite_code}`}
@@ -118,19 +121,16 @@ export default function DashboardOverviewPage() {
         <div className="flex items-center gap-3 flex-wrap">
           <button
             onClick={loadDashboardData}
-            className="px-3.5 py-2 text-xs font-semibold text-[#111111] bg-white border border-black/15 hover:bg-black/5 rounded-xl transition-all shadow-sm"
+            className="px-4 py-2.5 text-xs font-semibold text-[#111111] bg-white border border-black/15 hover:bg-black/5 rounded-xl transition-all shadow-sm active:scale-95"
           >
             Refresh Data
           </button>
 
           <Link
             href="/dashboard/import"
-            className="px-4 py-2 text-sm font-semibold bg-[#111111] hover:bg-black text-white rounded-xl shadow transition-all flex items-center gap-2"
+            className="px-4 py-2.5 text-xs font-bold bg-[#111111] hover:bg-black text-white rounded-xl shadow-sm transition-all active:scale-95 flex items-center gap-2"
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
-            </svg>
-            Import CSV
+            <span>+ Import CSV</span>
           </Link>
         </div>
       </div>
@@ -140,32 +140,25 @@ export default function DashboardOverviewPage() {
         <KPICard
           title="Confirmed Spend"
           value={formatCurrency(summary?.total_spend_cents || 0)}
-          subtitle="Expenses approved or edited"
-          badgeText="Human Approved"
-          badgeVariant="approved"
+          subtitle="Human approved expenses"
         />
         <KPICard
           title="Pending Reviews"
           value={summary?.pending_review_count || 0}
-          subtitle="Awaiting human verification"
-          badgeText={summary?.pending_review_count ? "Action Required" : "Queue Clear"}
-          badgeVariant={summary?.pending_review_count ? "pending" : "approved"}
+          subtitle={summary?.pending_review_count ? "Action required" : "Queue clear"}
         />
         <KPICard
           title="Approved AI Suggestions"
           value={summary?.approved_count || 0}
-          subtitle="AI suggestions accepted as-is"
-          badgeText="Approved"
-          badgeVariant="approved"
+          subtitle="Approved suggestions"
         />
         <KPICard
           title="Human Corrections"
           value={summary?.edited_count || 0}
-          subtitle="Categories edited by human"
-          badgeText="Edited"
-          badgeVariant="edited"
+          subtitle="Categories edited by humans"
         />
       </div>
+
 
       {/* Grid: Category Breakdown + Recent Queue */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

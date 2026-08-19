@@ -11,7 +11,7 @@ export function ProductFeatureGrid() {
       description: "Import transaction data, normalize vendors, and turn raw financial activity into structured records.",
       cta: "Explore Transactions",
       href: "/product/transactions",
-      imageSrc: "/how it works section/image1.png",
+      imageSrc: "/how it works/image.png",
       alt: "LedgerPilot transaction intelligence workflow showing transaction data being structured",
       icon: (
         <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -24,7 +24,7 @@ export function ProductFeatureGrid() {
       description: "Let Gemini categorize transactions and surface confident suggestions before they reach human review.",
       cta: "Explore AI Categorization",
       href: "/product/ai-categorization",
-      imageSrc: "/how it works section/image2.png",
+      imageSrc: "/how it works/image copy.png",
       alt: "LedgerPilot AI transaction categorization interface showing an AI category suggestion",
       icon: (
         <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -37,7 +37,7 @@ export function ProductFeatureGrid() {
       description: "Keep people in control with a focused review queue for approving, editing, or rejecting AI suggestions.",
       cta: "Explore Review",
       href: "/product/review",
-      imageSrc: "/how it works section/image3.png",
+      imageSrc: "/how it works/image copy 2.png",
       alt: "LedgerPilot human review workflow showing transaction approval controls",
       icon: (
         <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -50,7 +50,7 @@ export function ProductFeatureGrid() {
       description: "See confirmed spend, category activity, approval progress, and financial trends from one clear dashboard.",
       cta: "Explore Overview",
       href: "/product/overview",
-      imageSrc: "/how it works section/image4.png",
+      imageSrc: "/how it works/image copy 3.png",
       alt: "LedgerPilot financial overview dashboard showing confirmed spending data",
       icon: (
         <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -63,7 +63,7 @@ export function ProductFeatureGrid() {
       description: "Maintain a clear history of important financial decisions with traceable human actions and audit records.",
       cta: "Explore Controls",
       href: "/product/audit-controls",
-      imageSrc: "/how it works section/image5.png",
+      imageSrc: "/how it works/image copy 4.png",
       alt: "LedgerPilot audit and control interface showing traceable financial activity",
       icon: (
         <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -73,8 +73,10 @@ export function ProductFeatureGrid() {
     },
   ];
 
+
   return (
-    <section id="product" className="w-full py-16 sm:py-24 px-4 sm:px-6 lg:px-10 max-w-[1340px] mx-auto border-t border-black/5">
+    <section id="how-it-works" className="w-full py-16 sm:py-24 px-4 sm:px-6 lg:px-10 max-w-[1340px] mx-auto border-t border-black/5 scroll-mt-24">
+
       {/* Section Intro */}
       <div className="flex flex-col items-center text-center mb-12 sm:mb-16">
         <h2 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-[#111111] leading-tight max-w-3xl mb-4">

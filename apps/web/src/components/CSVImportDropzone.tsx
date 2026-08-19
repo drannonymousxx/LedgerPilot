@@ -47,16 +47,16 @@ export function CSVImportDropzone({ onImportSuccess }: CSVImportDropzoneProps) {
   };
 
   return (
-    <div className="glass-panel p-8 max-w-xl mx-auto space-y-6">
-      <div className="text-center space-y-2">
-        <h2 className="text-xl font-bold text-white tracking-tight">Import Transactions CSV</h2>
-        <p className="text-xs text-slate-400">
+    <div className="bg-white border border-black/10 rounded-2xl p-8 max-w-xl mx-auto space-y-6 shadow-sm">
+      <div className="text-center space-y-1">
+        <h2 className="text-xl font-extrabold text-[#111111] tracking-tight">Import Transactions CSV</h2>
+        <p className="text-xs text-black/60 font-medium">
           Upload a bank/credit card CSV export containing vendor, amount, date, and description.
         </p>
       </div>
 
       {/* File Dropzone */}
-      <div className="border-2 border-dashed border-slate-700 hover:border-indigo-500 rounded-xl p-8 text-center bg-slate-950/40 transition-colors">
+      <div className="border-2 border-dashed border-black/20 hover:border-black rounded-xl p-8 text-center bg-[#F8F7F2] transition-colors">
         <input
           type="file"
           accept=".csv"
@@ -65,23 +65,23 @@ export function CSVImportDropzone({ onImportSuccess }: CSVImportDropzoneProps) {
           id="csv-file-input"
         />
         <label htmlFor="csv-file-input" className="cursor-pointer block space-y-3">
-          <div className="w-12 h-12 rounded-full bg-indigo-600/10 text-indigo-400 mx-auto flex items-center justify-center border border-indigo-500/20">
+          <div className="w-12 h-12 rounded-full bg-[#111111] text-white mx-auto flex items-center justify-center shadow-sm">
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
             </svg>
           </div>
           <div>
-            <span className="text-sm font-semibold text-white">Click to select CSV file</span>
-            <p className="text-xs text-slate-500 mt-0.5">sample_transactions.csv or custom export</p>
+            <span className="text-sm font-bold text-[#111111]">Click to select CSV file</span>
+            <p className="text-xs text-black/50 font-medium mt-0.5">sample_transactions.csv or custom export</p>
           </div>
         </label>
 
         {file && (
-          <div className="mt-4 p-3 bg-indigo-950/30 border border-indigo-500/30 rounded-lg flex items-center justify-between text-xs text-indigo-300">
-            <span className="font-mono truncate">{file.name} ({(file.size / 1024).toFixed(1)} KB)</span>
+          <div className="mt-4 p-3 bg-white border border-black/15 rounded-xl flex items-center justify-between text-xs text-[#111111] shadow-sm">
+            <span className="font-mono truncate font-semibold">{file.name} ({(file.size / 1024).toFixed(1)} KB)</span>
             <button
               onClick={() => setFile(null)}
-              className="text-slate-400 hover:text-white font-bold ml-2"
+              className="text-black/50 hover:text-black font-bold ml-2"
             >
               ✕
             </button>
@@ -94,7 +94,7 @@ export function CSVImportDropzone({ onImportSuccess }: CSVImportDropzoneProps) {
         <button
           onClick={handleUpload}
           disabled={!file || uploading || !activeOrg}
-          className="w-full py-3 px-4 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-sm rounded-lg shadow-lg shadow-indigo-600/30 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+          className="w-full py-3.5 px-4 bg-[#111111] hover:bg-black text-white font-extrabold text-sm rounded-xl shadow-sm transition-all disabled:opacity-40 disabled:cursor-not-allowed"
         >
           {uploading ? "Uploading & Processing..." : "Upload & Run Gemini Categorization"}
         </button>
@@ -102,18 +102,18 @@ export function CSVImportDropzone({ onImportSuccess }: CSVImportDropzoneProps) {
 
       {/* Upload Result Feedback */}
       {result && (
-        <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-lg space-y-2">
-          <div className="flex items-center gap-2 text-emerald-400 font-semibold text-sm">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="p-4 bg-[#F8F7F2] border border-black/15 rounded-xl space-y-2 text-[#111111]">
+          <div className="flex items-center gap-2 font-extrabold text-sm">
+            <svg className="w-5 h-5 text-[#111111]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
             </svg>
             Import Complete!
           </div>
-          <p className="text-xs text-slate-300">
-            Successfully imported <strong className="text-white">{result.imported_count}</strong> rows. Skipped <strong className="text-white">{result.skipped_count}</strong> rows.
+          <p className="text-xs text-black/70 font-medium">
+            Successfully imported <strong className="text-[#111111]">{result.imported_count}</strong> rows. Skipped <strong className="text-[#111111]">{result.skipped_count}</strong> rows.
           </p>
           {result.errors.length > 0 && (
-            <div className="mt-2 text-xs text-amber-400 space-y-1">
+            <div className="mt-2 text-xs text-black/80 space-y-1">
               <strong>Row Errors:</strong>
               <ul className="list-disc list-inside">
                 {result.errors.map((err, idx) => (
@@ -122,17 +122,18 @@ export function CSVImportDropzone({ onImportSuccess }: CSVImportDropzoneProps) {
               </ul>
             </div>
           )}
-          <p className="text-[11px] text-emerald-400/80 pt-1">
+          <p className="text-[11px] text-black/60 pt-1 font-medium">
             Background Gemini categorization has been launched. Check the Review Queue to see AI suggestions.
           </p>
         </div>
       )}
 
       {error && (
-        <div className="p-4 bg-rose-500/10 border border-rose-500/20 rounded-lg text-rose-400 text-xs">
+        <div className="p-4 bg-black/5 border border-black/15 rounded-xl text-[#111111] text-xs font-semibold">
           <strong>Upload Error:</strong> {error}
         </div>
       )}
     </div>
   );
 }
+

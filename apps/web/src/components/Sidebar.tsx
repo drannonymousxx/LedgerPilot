@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { useOrg } from "@/lib/org-context";
@@ -38,6 +39,24 @@ export function Sidebar() {
         </svg>
       ),
     },
+    {
+      name: "Organization Team",
+      href: "/dashboard/team",
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+        </svg>
+      ),
+    },
+    {
+      name: "Organization Chat",
+      href: "/dashboard/chat",
+      icon: (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+        </svg>
+      ),
+    },
   ];
 
   return (
@@ -45,17 +64,17 @@ export function Sidebar() {
       <div>
         {/* Brand Header */}
         <div className="p-6 border-b border-white/10 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-3 group">
-            <div className="w-8 h-8 rounded-lg bg-white text-[#111111] flex items-center justify-center font-black text-sm">
-              L
-            </div>
-            <div>
-              <h1 className="font-bold text-white text-base tracking-tight">LedgerPilot</h1>
-              <span className="text-[10px] text-white/50 font-mono uppercase tracking-wider block">
-                Finance Operations
-              </span>
-            </div>
+          <Link href="/" className="flex items-center group">
+            <Image
+              src="/logo/logowhite.png"
+              alt="LedgerPilot"
+              width={130}
+              height={34}
+              priority
+              className="object-contain h-8 w-auto"
+            />
           </Link>
+
         </div>
 
         {/* Organization Switcher */}

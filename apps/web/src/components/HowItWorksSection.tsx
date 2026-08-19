@@ -4,7 +4,8 @@ import React from "react";
 
 export function HowItWorksSection() {
   return (
-    <section id="how-it-works" className="w-full py-16 sm:py-24 px-4 sm:px-6 lg:px-10 max-w-[1340px] mx-auto">
+    <section id="product" className="w-full py-16 sm:py-24 px-4 sm:px-6 lg:px-10 max-w-[1340px] mx-auto scroll-mt-24">
+
       {/* Section Intro */}
       <div className="flex flex-col items-center text-center mb-12 sm:mb-16">
         {/* Section Heading with Serif Accent matching reference */}

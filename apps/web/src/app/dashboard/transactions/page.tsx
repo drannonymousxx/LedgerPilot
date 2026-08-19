@@ -67,19 +67,20 @@ export default function TransactionsReviewQueuePage() {
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-6xl mx-auto">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-5">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-black/10 pb-5">
         <div>
-          <h1 className="text-2xl font-bold text-white tracking-tight">Transactions & AI Review Queue</h1>
-          <p className="text-sm text-slate-400">
-            Review, approve, or edit AI-suggested category allocations for {activeOrg?.name}
+          <h1 className="text-3xl font-extrabold tracking-tight text-[#111111]">Review Queue</h1>
+          <p className="text-sm text-black/60 font-medium mt-1">
+            Review, approve, or edit AI-suggested category allocations for{" "}
+            <span className="font-bold text-[#111111]">{activeOrg?.name}</span>.
           </p>
         </div>
       </div>
 
       {/* Filter Toolbar */}
-      <div className="glass-panel p-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="bg-white border border-black/10 rounded-2xl p-4 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
         {/* Status Tabs */}
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1 md:pb-0">
           {[
@@ -97,10 +98,10 @@ export default function TransactionsReviewQueuePage() {
                   setStatusFilter(tab.id);
                   setPage(1);
                 }}
-                className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${
+                className={`px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all ${
                   isActive
-                    ? "bg-indigo-600 text-white shadow-md shadow-indigo-600/20"
-                    : "text-slate-400 hover:text-slate-200 hover:bg-slate-800/60"
+                    ? "bg-[#111111] text-white font-extrabold shadow-sm"
+                    : "text-black/70 hover:text-black hover:bg-black/5"
                 }`}
               >
                 {tab.label}
@@ -117,7 +118,7 @@ export default function TransactionsReviewQueuePage() {
               setCategoryFilter(e.target.value);
               setPage(1);
             }}
-            className="bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500"
+            className="bg-[#F8F7F2] border border-black/15 rounded-xl px-3.5 py-2 text-xs font-semibold text-[#111111] focus:outline-none focus:ring-2 focus:ring-black"
           >
             <option value="">All Categories</option>
             {categories.map((c) => (
@@ -131,7 +132,7 @@ export default function TransactionsReviewQueuePage() {
 
       {/* Main Table */}
       {loading ? (
-        <div className="glass-panel p-12 text-center text-slate-500 text-sm">
+        <div className="bg-white border border-black/10 rounded-2xl p-12 text-center text-black/50 text-xs shadow-sm font-medium">
           Loading transaction review queue...
         </div>
       ) : (
@@ -143,7 +144,7 @@ export default function TransactionsReviewQueuePage() {
       )}
 
       {/* Pagination Controls */}
-      <div className="flex items-center justify-between text-xs text-slate-400 px-1">
+      <div className="flex items-center justify-between text-xs text-black/60 px-1 font-medium">
         <span>
           Showing {transactions.length > 0 ? (page - 1) * pageSize + 1 : 0} to{" "}
           {Math.min(page * pageSize, total)} of {total} transactions
@@ -152,24 +153,25 @@ export default function TransactionsReviewQueuePage() {
           <button
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={page === 1}
-            className="px-3 py-1.5 bg-slate-900 border border-slate-800 rounded-md text-slate-300 disabled:opacity-40 hover:bg-slate-800"
+            className="px-3.5 py-1.5 bg-white border border-black/15 rounded-xl text-[#111111] font-semibold hover:bg-black/5 disabled:opacity-40 shadow-sm transition-all"
           >
             Previous
           </button>
 
-          <span className="px-2 font-mono">
+          <span className="px-2 font-mono text-black/70">
             Page {page} of {totalPages}
           </span>
 
           <button
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
             disabled={page >= totalPages}
-            className="px-3 py-1.5 bg-slate-900 border border-slate-800 rounded-md text-slate-300 disabled:opacity-40 hover:bg-slate-800"
+            className="px-3.5 py-1.5 bg-white border border-black/15 rounded-xl text-[#111111] font-semibold hover:bg-black/5 disabled:opacity-40 shadow-sm transition-all"
           >
             Next
           </button>
         </div>
       </div>
+
 
       {/* Edit Category Modal */}
       <EditCategoryModal

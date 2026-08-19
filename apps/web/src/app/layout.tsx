@@ -7,8 +7,13 @@ import { OrganizationProvider } from "@/lib/org-context";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "LedgerPilot — AI Finance Ops Platform",
+  title: "LedgerPilot | AI Finance Operations",
   description: "AI-powered financial categorization and operations platform for startups",
+  icons: {
+    icon: "/logo/logoblack.png",
+    shortcut: "/logo/logoblack.png",
+    apple: "/logo/logoblack.png",
+  },
 };
 
 export default function RootLayout({
@@ -17,7 +22,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" className="scroll-smooth">
       <body className={inter.className}>
         <AuthProvider>
           <OrganizationProvider>{children}</OrganizationProvider>
@@ -26,3 +31,4 @@ export default function RootLayout({
     </html>
   );
 }
+
