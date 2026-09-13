@@ -1,9 +1,26 @@
+# Environment files
 .env
-.env.local
+.env.*
+!.env.example
+env.local
+
+# Build artifacts & dependencies
 node_modules/
 .next/
+*.tsbuildinfo
+
+# Python caches and virtual environments
 __pycache__/
 *.pyc
 .venv/
 venv/
 *.log
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Local development files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
