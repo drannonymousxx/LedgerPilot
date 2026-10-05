@@ -3,11 +3,23 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
 from app.api.routes import auth, transactions, organizations, reports
 
+from slowapi.errors import RateLimitExceeded
+from slowapi import _rate_limit_exceeded_handler
+from app.core.limiter import limiter
+
+from slowapi.middleware import SlowAPIMiddleware
+
 app = FastAPI(
     title="LedgerPilot API",
     description="API for LedgerPilot Financial Platform",
     version="0.1.0"
 )
+
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+app.add_middleware(SlowAPIMiddleware)
+
+
 
 # Configure CORS restricted to configured frontend origins
 origins = settings.CORS_ORIGINS if isinstance(settings.CORS_ORIGINS, list) else [settings.CORS_ORIGINS]

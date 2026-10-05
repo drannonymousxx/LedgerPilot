@@ -1,13 +1,16 @@
 from datetime import datetime
 from typing import List, Optional
 from uuid import UUID
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
+from app.core.config import settings
+from app.core.limiter import limiter
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.core.db import get_db
 from app.core.auth import get_current_user, get_current_org_membership, hash_password, verify_password
+
 from app.models.user import User
 from app.models.organization import Organization
 from app.models.organization_member import OrganizationMember
@@ -268,12 +271,15 @@ def create_organization_message(
 
 
 @router.post("/{id}/password", status_code=status.HTTP_200_OK)
+@limiter.limit(settings.RATE_LIMIT_SET_PASSWORD)
 def set_organization_password(
+    request: Request,
     id: UUID,
     payload: SetPasswordRequest,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
+
     """
     Sets or updates the organization joining password.
     Enforces server-side authorization: ONLY the organization Owner can manage passwords.

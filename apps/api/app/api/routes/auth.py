@@ -1,7 +1,9 @@
 from datetime import datetime
 from typing import List, Optional
 from uuid import UUID
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
+from app.core.config import settings
+from app.core.limiter import limiter
 from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy.orm import Session
 from sqlalchemy import func
@@ -15,6 +17,7 @@ from app.models.invitation import Invitation
 from app.services.category_service import seed_default_categories
 
 router = APIRouter(prefix="/auth", tags=["auth"])
+
 
 
 class UserProfileResponse(BaseModel):
@@ -211,11 +214,14 @@ def create_organization_auth(
 
 
 @router.post("/join-org", response_model=OrgMembershipResponse, status_code=status.HTTP_200_OK)
+@limiter.limit(settings.RATE_LIMIT_JOIN_ORG)
 def join_organization_auth(
+    request: Request,
     payload: JoinOrgRequest,
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
+
     """
     Joins an existing organization using Organization Name, ID, or invite_code + password.
     Enforces server-side security: users CANNOT self-assign 'owner' role.

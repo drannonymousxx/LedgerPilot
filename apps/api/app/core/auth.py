@@ -59,8 +59,9 @@ def verify_supabase_token(token: str) -> dict:
     """
     Verifies Supabase JWT token.
     1. If SUPABASE_URL is configured, calls Supabase /auth/v1/user endpoint.
-    2. If PyJWT + SUPABASE_JWT_SECRET configured, verifies signature.
-    3. Fallback: decodes unverified payload claims.
+    2. If SUPABASE_JWT_SECRET is configured, verifies signature with PyJWT (HS256).
+    3. Failure behavior: Fails closed (HTTP 401) unless ALLOW_UNVERIFIED_JWT is explicitly True
+       in a non-production environment for isolated local offline unit testing.
     """
     # 1. Try Supabase Auth API verification if SUPABASE_URL is set
     if settings.SUPABASE_URL:
@@ -85,9 +86,12 @@ def verify_supabase_token(token: str) -> dict:
                 detail=f"Invalid or expired Supabase authentication session ({e.code})",
             )
         except Exception:
-            pass  # Fallback to local token verification
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Supabase authentication endpoint reachability failure",
+            )
 
-    # 2. Try PyJWT if installed and SUPABASE_JWT_SECRET is set
+    # 2. Try PyJWT signature verification if SUPABASE_JWT_SECRET is set
     if settings.SUPABASE_JWT_SECRET:
         try:
             import jwt
@@ -98,10 +102,20 @@ def verify_supabase_token(token: str) -> dict:
                 options={"verify_aud": False},
             )
             return payload
-        except Exception:
-            pass
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail=f"Invalid JWT token signature: {str(e)}",
+            )
 
-    # 3. Fallback: decode unverified claims for local development
+    # 3. Fail closed if verification configuration is missing or unverified fallback is disabled
+    if not settings.ALLOW_UNVERIFIED_JWT or settings.ENVIRONMENT.lower() == "production":
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Authentication failed: Missing JWT verification secret or invalid token signature.",
+        )
+
+    # Development-only unverified parsing fallback (gated strictly to ALLOW_UNVERIFIED_JWT=True in non-production)
     payload = decode_jwt_payload_unverified(token)
     if "sub" not in payload:
         raise HTTPException(
@@ -109,6 +123,7 @@ def verify_supabase_token(token: str) -> dict:
             detail="Authentication token missing user subject claim",
         )
     return payload
+
 
 
 def get_current_user(

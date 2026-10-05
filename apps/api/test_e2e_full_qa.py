@@ -9,6 +9,7 @@ import uuid
 import csv
 import json
 from datetime import datetime, timezone
+from pathlib import Path
 from sqlalchemy import func
 from app.core.db import SessionLocal
 from app.core.auth import hash_password, verify_password
@@ -23,6 +24,8 @@ from app.models.category import Category
 from app.models.audit_log import AuditLog
 from app.services.category_service import seed_default_categories
 from app.services.csv_import_service import normalize_vendor_name
+
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 print("==========================================================")
 print("LEDGERPILOT END-TO-END QA & MULTI-TENANT SECURITY AUDIT")
@@ -48,10 +51,11 @@ try:
     # ---------------------------------------------------------
     # PHASE 1: ENVIRONMENT & SECRETS AUDIT
     # ---------------------------------------------------------
-    gitignore_path = "d:/Projects/LedgerPilot/.gitignore"
-    env_example_path = "d:/Projects/LedgerPilot/.env.example"
+    gitignore_path = BASE_DIR / ".gitignore"
+    env_example_path = BASE_DIR / ".env.example"
     has_gitignore = os.path.exists(gitignore_path)
     has_env_example = os.path.exists(env_example_path)
+
     
     with open(env_example_path, "r", encoding="utf-8") as f:
         env_ex_content = f.read()
@@ -216,7 +220,8 @@ try:
     # ---------------------------------------------------------
     # PHASE 10 & 11: CSV INGESTION & GEMINI CATEGORIZATION
     # ---------------------------------------------------------
-    csv_file_path = "d:/Projects/LedgerPilot/demo-data/qa_pdf_transactions.csv"
+    csv_file_path = BASE_DIR / "demo-data" / "qa_pdf_transactions.csv"
+
     imported_txs = []
     
     categories = db.query(Category).filter(Category.organization_id == org_a.id).all()
